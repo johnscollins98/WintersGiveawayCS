@@ -1,6 +1,5 @@
-﻿using System;
-using System.Configuration;
-using System.Collections.Specialized;
+﻿using Newtonsoft.Json;
+using WintersGiveaway.Models;
 
 namespace WintersGiveaway
 {
@@ -8,21 +7,15 @@ namespace WintersGiveaway
     {
         static async Task Main(string[] args)
         {
-            string botToken = GetConfigVariable("botToken");
-            string channelId = GetConfigVariable("channelId");
-            string guildId = GetConfigVariable("guildId");
-            string prizeMessageId = GetConfigVariable("prizeMessageId");
-            string entryMessageId = GetConfigVariable("entryMessageId");
-            string cutoffISODateString = GetConfigVariable("cutoffDate");
-            DateTime cutoffDate = DateTime.Parse(cutoffISODateString);
+            var config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
 
-            var discordGatherer = new DiscordGatherer("https://discord.com/api/v9", botToken, guildId, channelId);
-            var prizes = await discordGatherer.GetPrizes(prizeMessageId);
+            var discordGatherer = new DiscordGatherer("https://discord.com/api/v9", config.BotToken, config.GuildId, config.ChannelId);
+            var prizes = await discordGatherer.GetPrizes(config.PrizeMessageId);
             var guildMembers = await discordGatherer.GetDiscordGuildMembers();
-            var usersWhoReacted = await discordGatherer.GetDiscordMessageReactions(entryMessageId, "🎁");
+            var usersWhoReacted = await discordGatherer.GetDiscordMessageReactions(config.EntryMessageId, "🎁");
 
             var entryFilterer = new EntryFilterer(usersWhoReacted, guildMembers);
-            var eligibleMembers = entryFilterer.GetEligibleGuildMembers(cutoffDate);
+            var eligibleMembers = entryFilterer.GetEligibleGuildMembers(config.CutoffDate);
 
             var prizeAssigner = new PrizeAssigner(prizes, eligibleMembers.ToList(), new RandomNumberGenerator());
             var prizeAssignments = prizeAssigner.GetPrizeAssignments();
@@ -32,16 +25,6 @@ namespace WintersGiveaway
                 Console.WriteLine($"Prize: {prizeAssignment.Prize} " +
                     $"- Winner: {prizeAssignment.GuildMember.User.Username} (<@{prizeAssignment.GuildMember.User.Id}>)");
             }
-        }
-
-        static string GetConfigVariable(string key)
-        {
-            string? res = ConfigurationManager.AppSettings.Get(key);
-            if (res == null)
-            {
-                throw new KeyNotFoundException(key);
-            }
-            return res;
         }
     }
 }
