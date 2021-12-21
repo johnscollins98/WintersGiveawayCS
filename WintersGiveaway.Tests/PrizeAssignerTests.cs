@@ -46,10 +46,10 @@ namespace WintersGiveaway.Tests
             };
 
             mockDiscordGatherer = new Mock<IDiscordGatherer>();
-            mockDiscordGatherer.Setup(p => p.GetPrizes()).ReturnsAsync(mockPrizes);
+            mockDiscordGatherer.Setup(p => p.GetPrizesAsync()).ReturnsAsync(mockPrizes);
 
             mockEntryFilterer = new Mock<IEntryFilterer>();
-            mockEntryFilterer.Setup(p => p.GetEligibleGuildMembers()).ReturnsAsync(mockMembers);
+            mockEntryFilterer.Setup(p => p.GetEligibleGuildMembersAsync()).ReturnsAsync(mockMembers);
 
             mockRandomGenerator = new Mock<IRandom>();
         }
@@ -85,8 +85,8 @@ namespace WintersGiveaway.Tests
         public void TestErrorIsThrownIfPrizeCannotBeAssigned()
         {
             // Arrange
-            mockDiscordGatherer.Setup(p => p.GetPrizes()).ReturnsAsync(mockPrizes.Take(2));
-            mockEntryFilterer.Setup(p => p.GetEligibleGuildMembers()).ReturnsAsync(mockMembers.Take(1));
+            mockDiscordGatherer.Setup(p => p.GetPrizesAsync()).ReturnsAsync(mockPrizes.Take(2));
+            mockEntryFilterer.Setup(p => p.GetEligibleGuildMembersAsync()).ReturnsAsync(mockMembers.Take(1));
             var prizeAssigner = new PrizeAssigner(
                 mockEntryFilterer.Object, mockRandomGenerator.Object, mockDiscordGatherer.Object);
 
@@ -103,7 +103,7 @@ namespace WintersGiveaway.Tests
                 .Returns(0)
                 .Returns(0)
                 .Returns(2);
-            mockDiscordGatherer.Setup(p => p.GetPrizes()).ReturnsAsync(mockPrizes.Take(2));
+            mockDiscordGatherer.Setup(p => p.GetPrizesAsync()).ReturnsAsync(mockPrizes.Take(2));
 
             var prizeAssigner = new PrizeAssigner(
                 mockEntryFilterer.Object, mockRandomGenerator.Object, mockDiscordGatherer.Object);

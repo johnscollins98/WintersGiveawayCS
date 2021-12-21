@@ -17,7 +17,7 @@ namespace WintersGiveaway.Services
             this.apiRequester = apiRequester;
         }
 
-        public async Task<IEnumerable<DiscordUser>> GetDiscordMessageReactions()
+        public async Task<IEnumerable<DiscordUser>> GetDiscordMessageReactionsAsync()
         {
             bool finishedGathering = false;
             IEnumerable<DiscordUser> res = new List<DiscordUser>();
@@ -40,14 +40,14 @@ namespace WintersGiveaway.Services
             return res;
         }
 
-        public async Task<IEnumerable<string>> GetPrizes()
+        public async Task<IEnumerable<string>> GetPrizesAsync()
         {
             var message = await GetDiscordMessage(config.PrizeMessageId);
             var prizes = message.Content.Split("\n").Skip(1);
             return prizes;
         }
 
-        public async Task<IEnumerable<DiscordGuildMember>> GetDiscordGuildMembers()
+        public async Task<IEnumerable<DiscordGuildMember>> GetDiscordGuildMembersAsync()
         {
             var endpoint = $"/guilds/{config.GuildId}/members?limit=1000";
             var response = await MakeDiscordRequest<IEnumerable<DiscordGuildMember>>(endpoint);
@@ -65,7 +65,7 @@ namespace WintersGiveaway.Services
         {
             var message = new HttpRequestMessage(HttpMethod.Get, $"{rootUrl}{endpoint}");
             message.Headers.Add("Authorization", $"Bot {config.BotToken}");
-            return await apiRequester.MakeRequest<T>(message);
+            return await apiRequester.MakeRequestAsync<T>(message);
         }
     }
 }

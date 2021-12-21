@@ -2,6 +2,6 @@
 {
     public interface IRandom
     {
-        int Next(int n);
+        int Next(int max);
     }
 }

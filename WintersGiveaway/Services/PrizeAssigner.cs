@@ -18,8 +18,8 @@ namespace WintersGiveaway.Services
 
         public async Task<IEnumerable<PrizeAssignment>> GetPrizeAssignmentsAsync()
         {
-            var prizes = await discordGatherer.GetPrizes();
-            var members = (await entryFilterer.GetEligibleGuildMembers()).ToList();
+            var prizes = await discordGatherer.GetPrizesAsync();
+            var members = (await entryFilterer.GetEligibleGuildMembersAsync()).ToList();
 
             if (prizes.Count() > members.Count)
             {

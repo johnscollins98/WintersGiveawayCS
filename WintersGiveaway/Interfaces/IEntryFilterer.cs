@@ -4,6 +4,6 @@ namespace WintersGiveaway.Interfaces
 {
     public interface IEntryFilterer
     {
-        Task<IEnumerable<DiscordGuildMember>> GetEligibleGuildMembers();
+        Task<IEnumerable<DiscordGuildMember>> GetEligibleGuildMembersAsync();
     }
 }

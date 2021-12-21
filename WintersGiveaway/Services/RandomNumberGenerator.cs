@@ -10,9 +10,9 @@ namespace WintersGiveaway.Services
     {
         private readonly Random random = new Random();
 
-        public int Next(int n)
+        public int Next(int max)
         {
-            return random.Next(n);
+            return random.Next(max);
         }
     }
 }

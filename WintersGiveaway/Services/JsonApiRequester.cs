@@ -12,7 +12,7 @@ namespace WintersGiveaway.Services
     {
         private readonly HttpClient client = new HttpClient();
 
-        public async Task<T> MakeRequest<T>(HttpRequestMessage message) where T : class
+        public async Task<T> MakeRequestAsync<T>(HttpRequestMessage message) where T : class
         {
             var response = await client.SendAsync(message);
             var jsonString = await response.Content.ReadAsStringAsync();

@@ -14,10 +14,10 @@ namespace WintersGiveaway.Services
             this.configManager = configManager;
         }
 
-        public async Task<IEnumerable<DiscordGuildMember>> GetEligibleGuildMembers()
+        public async Task<IEnumerable<DiscordGuildMember>> GetEligibleGuildMembersAsync()
         {
-            var guildMembers = await discordGatherer.GetDiscordGuildMembers();
-            var usersWhoReacted = await discordGatherer.GetDiscordMessageReactions();
+            var guildMembers = await discordGatherer.GetDiscordGuildMembersAsync();
+            var usersWhoReacted = await discordGatherer.GetDiscordMessageReactionsAsync();
             return usersWhoReacted
                 .Where(user => guildMembers.Any(g => g.User.Id == user.Id))
                 .Select(user => guildMembers.First(g => g.User.Id == user.Id))

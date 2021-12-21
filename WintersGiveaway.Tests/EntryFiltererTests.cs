@@ -43,8 +43,8 @@ namespace WintersGiveaway.Tests
             };
 
             mockDiscordGatherer = new Mock<IDiscordGatherer>();
-            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(mockGuildMembers);
-            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(mockUsers);
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembersAsync()).ReturnsAsync(mockGuildMembers);
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactionsAsync()).ReturnsAsync(mockUsers);
 
             mockConfigManager = new Mock<IConfigManager>();
             mockConfigManager.Setup(p => p.GetConfg()).Returns(new Config
@@ -67,12 +67,12 @@ namespace WintersGiveaway.Tests
                 mockGuildMembers[0], mockGuildMembers[1], mockGuildMembers[2]
             };
 
-            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(users);
-            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(guildMembers);
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactionsAsync()).ReturnsAsync(users);
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembersAsync()).ReturnsAsync(guildMembers);
             var entryFilterer = new EntryFilterer(mockDiscordGatherer.Object, mockConfigManager.Object);
 
             // Act
-            var results = await entryFilterer.GetEligibleGuildMembers();
+            var results = await entryFilterer.GetEligibleGuildMembersAsync();
 
             // Assert
             Assert.AreEqual(results.Count(), 2);
@@ -95,12 +95,12 @@ namespace WintersGiveaway.Tests
                 mockGuildMembers[0], mockGuildMembers[1]
             };
 
-            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(users);
-            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(guildMembers);
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactionsAsync()).ReturnsAsync(users);
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembersAsync()).ReturnsAsync(guildMembers);
             var entryFilterer = new EntryFilterer(mockDiscordGatherer.Object, mockConfigManager.Object);
 
             // Act
-            var result = await entryFilterer.GetEligibleGuildMembers();
+            var result = await entryFilterer.GetEligibleGuildMembersAsync();
 
             // Assert
             Assert.AreEqual(result.Count(), 2);
@@ -125,8 +125,8 @@ namespace WintersGiveaway.Tests
 
             guildMembers[0].Joined = new DateTime(2022, 1, 1); // Same date
 
-            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(users);
-            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(guildMembers);
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactionsAsync()).ReturnsAsync(users);
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembersAsync()).ReturnsAsync(guildMembers);
             mockConfigManager.Setup(p => p.GetConfg()).Returns(new Config()
             {
                 CutoffDate = new DateTime(2022, 1, 1)
@@ -135,7 +135,7 @@ namespace WintersGiveaway.Tests
             var entityFilterer = new EntryFilterer(mockDiscordGatherer.Object, mockConfigManager.Object);
 
             // Act
-            var result = await entityFilterer.GetEligibleGuildMembers();
+            var result = await entityFilterer.GetEligibleGuildMembersAsync();
 
             // Assert
             Assert.AreEqual(result.Count(), 3);
@@ -158,8 +158,8 @@ namespace WintersGiveaway.Tests
 
             guildMembers[0].Joined = new DateTime(2022, 1, 1, 1, 0, 0); // One hour after
 
-            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(users);
-            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(guildMembers);
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactionsAsync()).ReturnsAsync(users);
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembersAsync()).ReturnsAsync(guildMembers);
             mockConfigManager.Setup(p => p.GetConfg()).Returns(new Config()
             {
                 CutoffDate = new DateTime(2022, 1, 1)
@@ -167,7 +167,7 @@ namespace WintersGiveaway.Tests
             var entityFilterer = new EntryFilterer(mockDiscordGatherer.Object, mockConfigManager.Object);
 
             // Act
-            var result = await entityFilterer.GetEligibleGuildMembers();
+            var result = await entityFilterer.GetEligibleGuildMembersAsync();
 
             // Assert
             Assert.AreEqual(result.Count(), 2);
