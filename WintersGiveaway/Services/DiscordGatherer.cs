@@ -1,26 +1,23 @@
 ﻿using Newtonsoft.Json;
+using WintersGiveaway.Interfaces;
 using WintersGiveaway.Models;
 
-namespace WintersGiveaway
+namespace WintersGiveaway.Services
 {
-    public class DiscordGatherer
+    public class DiscordGatherer : IDiscordGatherer
     {
-        private readonly HttpClient client = new HttpClient();
+        private readonly string rootUrl = "https://discord.com/api/v9";
 
-        private readonly string rootUrl;
-        private readonly string botToken;
-        private readonly string guildId;
-        private readonly string channelId;
+        private readonly Config config;
+        private readonly IApiRequester apiRequester;
 
-        public DiscordGatherer(string rootUrl, string botToken, string guildId, string channelId)
+        public DiscordGatherer(IApiRequester apiRequester, IConfigManager configManager)
         {
-            this.rootUrl = rootUrl;
-            this.botToken = botToken;
-            this.guildId = guildId;
-            this.channelId = channelId;
+            this.config = configManager.GetConfg();
+            this.apiRequester = apiRequester;
         }
 
-        public async Task<IEnumerable<DiscordUser>> GetDiscordMessageReactions(string messageId, string emoji)
+        public async Task<IEnumerable<DiscordUser>> GetDiscordMessageReactions()
         {
             bool finishedGathering = false;
             IEnumerable<DiscordUser> res = new List<DiscordUser>();
@@ -28,7 +25,7 @@ namespace WintersGiveaway
 
             while (!finishedGathering)
             {
-                var endpoint = $"/channels/{channelId}/messages/{messageId}/reactions/{emoji}?limit=100";
+                var endpoint = $"/channels/{config.ChannelId}/messages/{config.EntryMessageId}/reactions/{config.EntryEmoji}?limit=100";
                 if (lastId != null)
                 {
                     endpoint += $"&after={lastId}";
@@ -43,34 +40,32 @@ namespace WintersGiveaway
             return res;
         }
 
-        public async Task<IEnumerable<string>> GetPrizes(string messageId)
+        public async Task<IEnumerable<string>> GetPrizes()
         {
-            var message = await GetDiscordMessage(messageId);
+            var message = await GetDiscordMessage(config.PrizeMessageId);
             var prizes = message.Content.Split("\n").Skip(1);
             return prizes;
         }
 
         public async Task<IEnumerable<DiscordGuildMember>> GetDiscordGuildMembers()
         {
-            var endpoint = $"/guilds/{guildId}/members?limit=1000";
+            var endpoint = $"/guilds/{config.GuildId}/members?limit=1000";
             var response = await MakeDiscordRequest<IEnumerable<DiscordGuildMember>>(endpoint);
             return response;
         }
 
         private async Task<DiscordMessage> GetDiscordMessage(string messageId)
         {
-            var endpoint = $"/channels/{channelId}/messages/{messageId}";
+            var endpoint = $"/channels/{config.ChannelId}/messages/{messageId}";
             var response = await MakeDiscordRequest<DiscordMessage>(endpoint);
             return response;
         }
 
-        private async Task<T> MakeDiscordRequest<T>(string endpoint)
+        private async Task<T> MakeDiscordRequest<T>(string endpoint) where T : class
         {
             var message = new HttpRequestMessage(HttpMethod.Get, $"{rootUrl}{endpoint}");
-            message.Headers.Add("Authorization", $"Bot {botToken}");
-            var response = await client.SendAsync(message);
-            var jsonString = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(jsonString);
+            message.Headers.Add("Authorization", $"Bot {config.BotToken}");
+            return await apiRequester.MakeRequest<T>(message);
         }
     }
 }

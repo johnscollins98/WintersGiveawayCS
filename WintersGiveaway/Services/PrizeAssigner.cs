@@ -1,22 +1,26 @@
-﻿using WintersGiveaway.Models;
+﻿using WintersGiveaway.Interfaces;
+using WintersGiveaway.Models;
 
-namespace WintersGiveaway
+namespace WintersGiveaway.Services
 {
-    public class PrizeAssigner
+    public class PrizeAssigner : IPrizeAssigner
     {
-        private readonly IEnumerable<string> prizes;
-        private readonly IList<DiscordGuildMember> members;
+        private readonly IEntryFilterer entryFilterer;
         private readonly IRandom random;
+        private readonly IDiscordGatherer discordGatherer;
 
-        public PrizeAssigner(IEnumerable<string> prizes, IList<DiscordGuildMember> members, IRandom random)
+        public PrizeAssigner(IEntryFilterer entryFilterer, IRandom random, IDiscordGatherer discordGatherer)
         {
-            this.prizes = prizes;
-            this.members = members;
+            this.entryFilterer = entryFilterer;
             this.random = random;
+            this.discordGatherer = discordGatherer;
         }
 
-        public IEnumerable<PrizeAssignment> GetPrizeAssignments()
+        public async Task<IEnumerable<PrizeAssignment>> GetPrizeAssignmentsAsync()
         {
+            var prizes = await discordGatherer.GetPrizes();
+            var members = (await entryFilterer.GetEligibleGuildMembers()).ToList();
+
             if (prizes.Count() > members.Count)
             {
                 throw new ArgumentException("Error: There are more prizes than members");

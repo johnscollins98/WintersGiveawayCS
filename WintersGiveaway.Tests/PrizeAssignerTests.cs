@@ -1,36 +1,24 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WintersGiveaway.Interfaces;
 using WintersGiveaway.Models;
+using WintersGiveaway.Services;
 
 namespace WintersGiveaway.Tests
 {
-    internal class MockRandomGenerator : IRandom
-    {
-        private readonly IList<int> mockValues;
-        private int index;
-
-        public MockRandomGenerator(IList<int> mockValues)
-        {
-            this.mockValues = mockValues;
-            index = 0;
-        }
-        public int Next(int n)
-        {
-            var value = mockValues[index];
-            index++;
-            return value < n ? value : n - 1;
-        }
-    }
-
     [TestClass]
     public class PrizeAssignerTests
     {
         private List<string> mockPrizes;
         private List<DiscordGuildMember> mockMembers;
+        private Mock<IDiscordGatherer> mockDiscordGatherer;
+        private Mock<IRandom> mockRandomGenerator;
+        private Mock<IEntryFilterer> mockEntryFilterer;
 
         [TestInitialize]
         public void TestInitialize()
@@ -56,16 +44,32 @@ namespace WintersGiveaway.Tests
                     User = new DiscordUser { Id = "2", Username = "User2" }
                 }
             };
+
+            mockDiscordGatherer = new Mock<IDiscordGatherer>();
+            mockDiscordGatherer.Setup(p => p.GetPrizes()).ReturnsAsync(mockPrizes);
+
+            mockEntryFilterer = new Mock<IEntryFilterer>();
+            mockEntryFilterer.Setup(p => p.GetEligibleGuildMembers()).ReturnsAsync(mockMembers);
+
+            mockRandomGenerator = new Mock<IRandom>();
         }
 
         [TestMethod]
-        public void TestCorrectPrizesAreAssigned()
+        public async Task TestCorrectPrizesAreAssigned()
         {
-            var rng = new MockRandomGenerator(new List<int>() { 1, 0, 2 });
-            var prizeAssigner = new PrizeAssigner(mockPrizes, mockMembers, rng);
+            // Arrange
+            mockRandomGenerator.SetupSequence(p => p.Next(3))
+                .Returns(1)
+                .Returns(0)
+                .Returns(2);
 
-            var result = prizeAssigner.GetPrizeAssignments().ToList();
+            var prizeAssigner = new PrizeAssigner(
+                mockEntryFilterer.Object, mockRandomGenerator.Object, mockDiscordGatherer.Object);
 
+            // Act
+            var result = (await prizeAssigner.GetPrizeAssignmentsAsync()).ToList();
+
+            // Assert
             Assert.AreEqual(result.Count(), 3);
 
             Assert.AreEqual(result[0].Prize, mockPrizes[0]);
@@ -80,19 +84,34 @@ namespace WintersGiveaway.Tests
         [TestMethod]
         public void TestErrorIsThrownIfPrizeCannotBeAssigned()
         {
-            var rng = new MockRandomGenerator(new List<int>() { 0, 0, 0, 0 });
-            var prizeAssigner = new PrizeAssigner(mockPrizes.Take(2), mockMembers.Take(1).ToList(), rng);
+            // Arrange
+            mockDiscordGatherer.Setup(p => p.GetPrizes()).ReturnsAsync(mockPrizes.Take(2));
+            mockEntryFilterer.Setup(p => p.GetEligibleGuildMembers()).ReturnsAsync(mockMembers.Take(1));
+            var prizeAssigner = new PrizeAssigner(
+                mockEntryFilterer.Object, mockRandomGenerator.Object, mockDiscordGatherer.Object);
 
-            Assert.ThrowsException<ArgumentException>(() => prizeAssigner.GetPrizeAssignments());
+            // Act/Assert
+            Assert.ThrowsExceptionAsync<ArgumentException>(() => prizeAssigner.GetPrizeAssignmentsAsync());
         }
 
         [TestMethod]
-        public void TestMemberCannotWinMultiplePrizes()
+        public async Task TestMemberCannotWinMultiplePrizes()
         {
-            var rng = new MockRandomGenerator(new List<int>() { 0, 0, 0, 2 });
-            var prizeAssigner = new PrizeAssigner(mockPrizes.Take(2), mockMembers, rng);
-            var res = prizeAssigner.GetPrizeAssignments().ToList();
+            // Arrange
+            mockRandomGenerator.SetupSequence(p => p.Next(3))
+                .Returns(0)
+                .Returns(0)
+                .Returns(0)
+                .Returns(2);
+            mockDiscordGatherer.Setup(p => p.GetPrizes()).ReturnsAsync(mockPrizes.Take(2));
 
+            var prizeAssigner = new PrizeAssigner(
+                mockEntryFilterer.Object, mockRandomGenerator.Object, mockDiscordGatherer.Object);
+
+            // Act
+            var res = (await prizeAssigner.GetPrizeAssignmentsAsync()).ToList();
+
+            // Assert
             Assert.AreEqual(res[0].GuildMember, mockMembers[0]);
             Assert.AreEqual(res[1].GuildMember, mockMembers[2]);
             Assert.AreEqual(res.Count, 2);

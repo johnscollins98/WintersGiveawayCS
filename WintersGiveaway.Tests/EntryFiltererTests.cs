@@ -1,8 +1,12 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using WintersGiveaway.Interfaces;
 using WintersGiveaway.Models;
+using WintersGiveaway.Services;
 
 namespace WintersGiveaway.Tests
 {
@@ -13,6 +17,8 @@ namespace WintersGiveaway.Tests
         private List<DiscordGuildMember> mockGuildMembers;
         private DateTime dateInPast;
         private DateTime dateAfterPast;
+        private Mock<IDiscordGatherer> mockDiscordGatherer;
+        private Mock<IConfigManager> mockConfigManager;
 
         [TestInitialize]
         public void TestInitialize()
@@ -35,11 +41,22 @@ namespace WintersGiveaway.Tests
                 new DiscordGuildMember() { Joined = dateInPast, User = mockUsers[2] },
                 new DiscordGuildMember() { Joined = dateInPast, User = mockUsers[3] },
             };
+
+            mockDiscordGatherer = new Mock<IDiscordGatherer>();
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(mockGuildMembers);
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(mockUsers);
+
+            mockConfigManager = new Mock<IConfigManager>();
+            mockConfigManager.Setup(p => p.GetConfg()).Returns(new Config
+            {
+                CutoffDate = dateAfterPast
+            });
         }
 
         [TestMethod]
-        public void TestItOnlyIncludesUsersWhoReacted()
+        public async Task TestItOnlyIncludesUsersWhoReacted()
         {
+            // Arrange
             var users = new List<DiscordUser>()
             {
                 mockUsers[0], mockUsers[1]
@@ -50,9 +67,14 @@ namespace WintersGiveaway.Tests
                 mockGuildMembers[0], mockGuildMembers[1], mockGuildMembers[2]
             };
 
-            var entryFilterer = new EntryFilterer(users, guildMembers);
-            var results = entryFilterer.GetEligibleGuildMembers(dateAfterPast);
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(users);
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(guildMembers);
+            var entryFilterer = new EntryFilterer(mockDiscordGatherer.Object, mockConfigManager.Object);
 
+            // Act
+            var results = await entryFilterer.GetEligibleGuildMembers();
+
+            // Assert
             Assert.AreEqual(results.Count(), 2);
             Assert.IsTrue(results.Contains(guildMembers[0]));
             Assert.IsTrue(results.Contains(guildMembers[1]));
@@ -60,8 +82,9 @@ namespace WintersGiveaway.Tests
         }
 
         [TestMethod]
-        public void TestItFiltersNonGuildMembers()
+        public async Task TestItFiltersNonGuildMembers()
         {
+            // Arrange
             var users = new List<DiscordUser>()
             {
                 mockUsers[0], mockUsers[1], mockUsers[2]
@@ -72,9 +95,14 @@ namespace WintersGiveaway.Tests
                 mockGuildMembers[0], mockGuildMembers[1]
             };
 
-            var entryFilterer = new EntryFilterer(users, guildMembers);
-            var result = entryFilterer.GetEligibleGuildMembers(dateAfterPast);
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(users);
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(guildMembers);
+            var entryFilterer = new EntryFilterer(mockDiscordGatherer.Object, mockConfigManager.Object);
 
+            // Act
+            var result = await entryFilterer.GetEligibleGuildMembers();
+
+            // Assert
             Assert.AreEqual(result.Count(), 2);
             Assert.IsTrue(result.Contains(guildMembers[0]));
             Assert.IsTrue(result.Contains(guildMembers[1]));
@@ -82,8 +110,9 @@ namespace WintersGiveaway.Tests
         }
 
         [TestMethod]
-        public void TestIncludesMatchingDate()
+        public async Task TestIncludesMatchingDate()
         {
+            // Arrange
             var users = new List<DiscordUser>()
             {
                 mockUsers[0], mockUsers[1], mockUsers[2]
@@ -94,19 +123,29 @@ namespace WintersGiveaway.Tests
                 mockGuildMembers[0], mockGuildMembers[1], mockGuildMembers[2]
             };
 
-            // One hour after
-            guildMembers[0].Joined = new DateTime(2022, 1, 1);
+            guildMembers[0].Joined = new DateTime(2022, 1, 1); // Same date
 
-            var entityFilterer = new EntryFilterer(users, guildMembers);
-            var result = entityFilterer.GetEligibleGuildMembers(new DateTime(2022, 1, 1));
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(users);
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(guildMembers);
+            mockConfigManager.Setup(p => p.GetConfg()).Returns(new Config()
+            {
+                CutoffDate = new DateTime(2022, 1, 1)
+            });
 
+            var entityFilterer = new EntryFilterer(mockDiscordGatherer.Object, mockConfigManager.Object);
+
+            // Act
+            var result = await entityFilterer.GetEligibleGuildMembers();
+
+            // Assert
             Assert.AreEqual(result.Count(), 3);
             Assert.IsTrue(result.Contains(guildMembers[0]));
         }
 
         [TestMethod]
-        public void TestIsFiltersDatesPastCutoff()
+        public async Task TestIsFiltersDatesPastCutoff()
         {
+            // Arrange
             var users = new List<DiscordUser>()
             {
                 mockUsers[0], mockUsers[1], mockUsers[2]
@@ -117,12 +156,20 @@ namespace WintersGiveaway.Tests
                 mockGuildMembers[0], mockGuildMembers[1], mockGuildMembers[2]
             };
 
-            // One hour after
-            guildMembers[0].Joined = new DateTime(2022, 1, 1, 1, 0, 0);
+            guildMembers[0].Joined = new DateTime(2022, 1, 1, 1, 0, 0); // One hour after
 
-            var entityFilterer = new EntryFilterer(users, guildMembers);
-            var result = entityFilterer.GetEligibleGuildMembers(new DateTime(2022, 1, 1));
+            mockDiscordGatherer.Setup(p => p.GetDiscordMessageReactions()).ReturnsAsync(users);
+            mockDiscordGatherer.Setup(p => p.GetDiscordGuildMembers()).ReturnsAsync(guildMembers);
+            mockConfigManager.Setup(p => p.GetConfg()).Returns(new Config()
+            {
+                CutoffDate = new DateTime(2022, 1, 1)
+            });
+            var entityFilterer = new EntryFilterer(mockDiscordGatherer.Object, mockConfigManager.Object);
 
+            // Act
+            var result = await entityFilterer.GetEligibleGuildMembers();
+
+            // Assert
             Assert.AreEqual(result.Count(), 2);
             Assert.IsFalse(result.Contains(guildMembers[0]));
         }

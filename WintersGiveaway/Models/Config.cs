@@ -7,6 +7,7 @@
         public string ChannelId { get; set; }
         public string EntryMessageId { get; set; }
         public string PrizeMessageId { get; set; }
+        public string EntryEmoji { get; set; }
         public DateTime CutoffDate { get; set; }
     }
 }

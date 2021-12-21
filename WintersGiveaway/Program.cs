@@ -1,5 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
+using WintersGiveaway.Interfaces;
 using WintersGiveaway.Models;
+using WintersGiveaway.Services;
 
 namespace WintersGiveaway
 {
@@ -7,19 +11,21 @@ namespace WintersGiveaway
     {
         static async Task Main(string[] args)
         {
-            var config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
+            IHost host = Host.CreateDefaultBuilder(args)
+                .ConfigureServices((_, services) =>
+                    services
+                        .AddSingleton<IRandom, RandomNumberGenerator>()
+                        .AddSingleton<IApiRequester, JsonApiRequester>()
+                        .AddSingleton<IConfigManager>(s =>
+                            new JsonFileConfigManager(new BasicFile("config.json")))
+                        .AddSingleton<IDiscordGatherer, DiscordGatherer>()
+                        .AddSingleton<IEntryFilterer, EntryFilterer>()
+                        .AddSingleton<IPrizeAssigner, PrizeAssigner>()
+                )
+                .Build();
 
-            var discordGatherer = new DiscordGatherer("https://discord.com/api/v9", config.BotToken, config.GuildId, config.ChannelId);
-            var prizes = await discordGatherer.GetPrizes(config.PrizeMessageId);
-            var guildMembers = await discordGatherer.GetDiscordGuildMembers();
-            var usersWhoReacted = await discordGatherer.GetDiscordMessageReactions(config.EntryMessageId, "🎁");
-
-            var entryFilterer = new EntryFilterer(usersWhoReacted, guildMembers);
-            var eligibleMembers = entryFilterer.GetEligibleGuildMembers(config.CutoffDate);
-
-            var prizeAssigner = new PrizeAssigner(prizes, eligibleMembers.ToList(), new RandomNumberGenerator());
-            var prizeAssignments = prizeAssigner.GetPrizeAssignments();
-
+            var prizeAssigner = host.Services.GetRequiredService<IPrizeAssigner>();
+            var prizeAssignments = await prizeAssigner.GetPrizeAssignmentsAsync();
             foreach (var prizeAssignment in prizeAssignments)
             {
                 Console.WriteLine($"Prize: {prizeAssignment.Prize} " +
