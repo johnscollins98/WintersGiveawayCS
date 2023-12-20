@@ -25,7 +25,7 @@ namespace WintersGiveaway.Services
 
             while (!finishedGathering)
             {
-                var endpoint = $"/channels/{config.ChannelId}/messages/{config.EntryMessageId}/reactions/{config.EntryEmoji}?limit=100";
+                var endpoint = $"/channels/{config.EntryChannelId}/messages/{config.EntryMessageId}/reactions/{config.EntryEmoji}?limit=100";
                 if (lastId != null)
                 {
                     endpoint += $"&after={lastId}";
@@ -42,7 +42,7 @@ namespace WintersGiveaway.Services
 
         public async Task<IEnumerable<string>> GetPrizesAsync()
         {
-            var message = await GetDiscordMessage(config.PrizeMessageId);
+            var message = await GetDiscordMessage(config.PrizeChannelId, config.PrizeMessageId);
             var prizes = message.Content.Split("\n").Skip(1);
             return prizes;
         }
@@ -54,9 +54,9 @@ namespace WintersGiveaway.Services
             return response;
         }
 
-        private async Task<DiscordMessage> GetDiscordMessage(string messageId)
+        private async Task<DiscordMessage> GetDiscordMessage(string channelId, string messageId)
         {
-            var endpoint = $"/channels/{config.ChannelId}/messages/{messageId}";
+            var endpoint = $"/channels/{channelId}/messages/{messageId}";
             var response = await MakeDiscordRequest<DiscordMessage>(endpoint);
             return response;
         }
