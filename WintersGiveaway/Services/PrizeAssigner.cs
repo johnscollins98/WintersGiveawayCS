@@ -16,7 +16,7 @@ namespace WintersGiveaway.Services
             this.discordGatherer = discordGatherer;
         }
 
-        public async Task<IEnumerable<PrizeAssignment>> GetPrizeAssignmentsAsync()
+        public async Task<PrizeAssignmentResult> GetPrizeAssignmentsAsync()
         {
             var prizes = await discordGatherer.GetPrizesAsync();
             var members = (await entryFilterer.GetEligibleGuildMembersAsync()).ToList();
@@ -47,9 +47,11 @@ namespace WintersGiveaway.Services
                         Prize = prize,
                         GuildMember = members[memberIndex]
                     };
-                });
+                }).ToList();
 
-            return assignments;
+            var remainingMembers = members.Where((m, i) => !assignedIndices.Contains(i)).ToList();
+
+            return new PrizeAssignmentResult { PrizeAssignments = assignments, UnassignedMembers = remainingMembers };
         }
     }
 }

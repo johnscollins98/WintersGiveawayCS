@@ -4,6 +4,6 @@ namespace WintersGiveaway.Interfaces
 {
     public interface IPrizeAssigner
     {
-        Task<IEnumerable<PrizeAssignment>> GetPrizeAssignmentsAsync();
+        Task<PrizeAssignmentResult> GetPrizeAssignmentsAsync();
     }
 }

@@ -26,10 +26,19 @@ namespace WintersGiveaway
 
             var prizeAssigner = host.Services.GetRequiredService<IPrizeAssigner>();
             var prizeAssignments = await prizeAssigner.GetPrizeAssignmentsAsync();
-            foreach (var prizeAssignment in prizeAssignments)
+            foreach (var prizeAssignment in prizeAssignments.PrizeAssignments)
             {
                 Console.WriteLine($"Prize: {prizeAssignment.Prize} " +
                     $"- Winner: {prizeAssignment.GuildMember.User.Username} (<@{prizeAssignment.GuildMember.User.Id}>)");
+            }
+
+            Console.WriteLine("");
+            Console.WriteLine("People who didn't win:");
+            Console.WriteLine("");
+
+            foreach (var remaining in prizeAssignments.UnassignedMembers)
+            {
+                Console.WriteLine($"{remaining.User.Username} (<@{remaining.User.Id}>)");
             }
         }
     }
