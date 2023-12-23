@@ -22,7 +22,8 @@ namespace WintersGiveaway.Tests
             mockFile.Setup(p => p.GetText()).Returns(
                 @"{
                     ""botToken"": ""1"",
-                    ""channelId"": ""2"",
+                    ""prizeChannelId"": ""2"",
+                    ""entryChannelId"": ""6"",
                     ""guildId"": ""3"",
                     ""prizeMessageId"": ""4"",
                     ""entryMessageId"":  ""5"",
@@ -43,7 +44,8 @@ namespace WintersGiveaway.Tests
 
             // Assert
             Assert.AreEqual(config.BotToken, "1");
-            Assert.AreEqual(config.ChannelId, "2");
+            Assert.AreEqual(config.PrizeChannelId, "2");
+            Assert.AreEqual(config.EntryChannelId, "6");
             Assert.AreEqual(config.GuildId, "3");
             Assert.AreEqual(config.PrizeMessageId, "4");
             Assert.AreEqual(config.EntryMessageId, "5");
@@ -80,7 +82,8 @@ namespace WintersGiveaway.Tests
 
             // Assert
             Assert.AreEqual(config.BotToken, null);
-            Assert.AreEqual(config.ChannelId, null);
+            Assert.AreEqual(config.PrizeChannelId, null);
+            Assert.AreEqual(config.EntryMessageId, null);
             Assert.AreEqual(config.GuildId, null);
             Assert.AreEqual(config.PrizeMessageId, null);
             Assert.AreEqual(config.EntryMessageId, null);

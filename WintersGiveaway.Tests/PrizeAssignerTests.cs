@@ -67,7 +67,7 @@ namespace WintersGiveaway.Tests
                 mockEntryFilterer.Object, mockRandomGenerator.Object, mockDiscordGatherer.Object);
 
             // Act
-            var result = (await prizeAssigner.GetPrizeAssignmentsAsync()).ToList();
+            var result = (await prizeAssigner.GetPrizeAssignmentsAsync()).PrizeAssignments.ToList();
 
             // Assert
             Assert.AreEqual(result.Count(), 3);
@@ -109,7 +109,7 @@ namespace WintersGiveaway.Tests
                 mockEntryFilterer.Object, mockRandomGenerator.Object, mockDiscordGatherer.Object);
 
             // Act
-            var res = (await prizeAssigner.GetPrizeAssignmentsAsync()).ToList();
+            var res = (await prizeAssigner.GetPrizeAssignmentsAsync()).PrizeAssignments.ToList();
 
             // Assert
             Assert.AreEqual(res[0].GuildMember, mockMembers[0]);

@@ -27,7 +27,8 @@ namespace WintersGiveaway.Tests
             {
                 GuildId = "1",
                 BotToken = "2",
-                ChannelId = "3",
+                EntryChannelId = "7",
+                PrizeChannelId = "3",
                 CutoffDate = DateTime.UtcNow,
                 EntryEmoji = "4",
                 EntryMessageId = "5",
@@ -79,7 +80,7 @@ namespace WintersGiveaway.Tests
                 p => p.MakeRequestAsync<IEnumerable<DiscordUser>>(It.IsAny<HttpRequestMessage>()),
                 Times.Exactly(2));
 
-            var endpoint = $"https://discord.com/api/v9/channels/{config.ChannelId}/messages/{config.EntryMessageId}/reactions/{config.EntryEmoji}?limit=100&after=99";
+            var endpoint = $"https://discord.com/api/v9/channels/{config.EntryChannelId}/messages/{config.EntryMessageId}/reactions/{config.EntryEmoji}?limit=100&after=99";
             var msg = new HttpRequestMessage(HttpMethod.Get, endpoint);
             msg.Headers.Add("Authorization", $"Bot {config.BotToken}");
             apiRequester.Verify(
@@ -106,7 +107,7 @@ namespace WintersGiveaway.Tests
             Assert.AreEqual(prizes.ToList()[0], "Prize 1");
 
             var config = configManager.Object.GetConfg();
-            var endpoint = $"https://discord.com/api/v9/channels/{config.ChannelId}/messages/{config.PrizeMessageId}";
+            var endpoint = $"https://discord.com/api/v9/channels/{config.PrizeChannelId}/messages/{config.PrizeMessageId}";
             apiRequester.Verify(p => p.MakeRequestAsync<DiscordMessage>(It.Is<HttpRequestMessage>(p => p.RequestUri.ToString() == endpoint)), Times.Exactly(1));
         }
 
