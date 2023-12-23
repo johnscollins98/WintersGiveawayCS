@@ -28,7 +28,7 @@ namespace WintersGiveaway
             var prizeAssignments = await prizeAssigner.GetPrizeAssignmentsAsync();
             foreach (var prizeAssignment in prizeAssignments.PrizeAssignments)
             {
-                Console.WriteLine($"Prize: {prizeAssignment.Prize} " +
+                Console.WriteLine($"Prize: {prizeAssignment.Prize.Replace("*", "").Trim()} " +
                     $"- Winner: {prizeAssignment.GuildMember.User.Username} (<@{prizeAssignment.GuildMember.User.Id}>)");
             }
 
